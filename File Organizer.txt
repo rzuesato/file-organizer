@@ -1,0 +1,88 @@
+# --- Imports ---
+import os
+# Provides functions to interact with the operating system, like checking files, folders, and paths.
+
+import shutil
+# Lets you move, copy, and delete files and folders.
+
+from datetime import datetime
+# Allows you to get the current date and time, used for timestamps in logs.
+
+from tkinter import Tk
+# Tkinter is a GUI library; Tk() initializes a GUI window.
+
+from tkinter.filedialog import askdirectory
+# Provides a folder picker dialog so the user can select a folder visually.
+
+# --- Function Definition ---
+def organize_files(folder_path):
+# Defines a function called 'organize_files' that takes one argument: the folder path to organize.
+
+    # --- Log File Setup ---
+    log_file = os.path.join(folder_path, "file_organizer_log.txt")
+    # Combines the folder path and log file name to create the full log file path.
+
+    with open(log_file, "a", encoding="utf-8") as log:
+        log.write(f"\n--- Organizing run at {datetime.now()} ---\n")
+    # Opens the log file in append mode so old logs are preserved.
+    # Writes a timestamp to show when the script ran.
+
+    # --- Loop Through Files ---
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        if os.path.isfile(file_path):
+        # Loops through all items in the folder.
+        # Combines folder path and filename to get full file path.
+        # Checks if it is a file (ignores subfolders).
+
+            # --- Get File Extension ---
+            ext = os.path.splitext(filename)[1].lower()
+            if not ext:
+                ext = "no_extension"
+            # Splits filename into name + extension.
+            # Converts extension to lowercase for consistency.
+            # Assigns 'no_extension' if the file has no extension.
+
+            # --- Create Category Folder ---
+            category_folder = os.path.join(folder_path, ext.replace(".", "").upper())
+            if not os.path.exists(category_folder):
+                os.makedirs(category_folder)
+            # Creates a folder for this file type (e.g., .txt -> TXT).
+            # Checks if the folder exists, and creates it if not.
+
+            # --- Handle Duplicate Filenames ---
+            dest_path = os.path.join(category_folder, filename)
+            counter = 1
+            while os.path.exists(dest_path):
+                name, extension = os.path.splitext(filename)
+                dest_path = os.path.join(category_folder, f"{name}({counter}){extension}")
+                counter += 1
+            # Checks if a file with the same name already exists in the folder.
+            # If so, adds (1), (2), etc., to avoid overwriting.
+
+            # --- Move the File ---
+            shutil.move(file_path, dest_path)
+            print(f"Moved {filename} -> {category_folder}")
+            with open(log_file, "a", encoding="utf-8") as log:
+                log.write(f"Moved {filename} -> {category_folder}\n")
+            # Moves the file to the correct folder.
+            # Prints a message in the console so you can watch it happen.
+            # Writes the move to the log file.
+
+# --- GUI Folder Picker ---
+root = Tk()
+root.withdraw()
+# Starts a Tkinter GUI window and hides it so only the folder picker shows.
+
+folder_path = askdirectory(title="Select Folder to Organize")
+# Opens a folder picker dialog so the user can choose a folder visually.
+
+# --- Run the Function ---
+if folder_path:
+    organize_files(folder_path)
+    print("Folder organized successfully!")
+else:
+    print("No folder selected. Exiting.")
+# Checks if a folder was selected.
+# Runs the organizer if a folder was picked.
+# Prints a success or exit message.
